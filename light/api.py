@@ -68,11 +68,33 @@ class LightApi:
 
     def delete_tool(self, tool):
         headers = {"authorization": "Bearer " + self._token, "accept": "application/vnd.api+json"}
-        requests.delete(API_DELETE_TOOL + '/' + tool.instance_id, headers=headers)
+        res = requests.delete(API_DELETE_TOOL + '/' + tool.instance_id, headers=headers)
 
-    def add_tool(self, tool_id):
-        headers = {"authorization": "Bearer " + self._token, "accept": "application/vnd.api+json"}
-        requests.post(API_ADD_TOOL + '/' + tool_id, headers=headers)
+        # TODO: Update phone state. We can either loop through every phone until
+        # we find the tool with the same instance ID, and then remove that tool,
+        # or we can require the phone's ID when calling this function.
+
+    def add_tool(self, phone_id, tool_id):
+        headers = {"authorization": "Bearer " + self._token, "accept": "application/vnd.api+json", "content-type": "application/vnd.api+json"}
+        payload = {
+            "data": {
+                "attributes": {
+                    "config": {},
+                    "device_id": phone_id,
+                    "tool_id": tool_id,
+                },
+                "type": "device_tools"
+            }
+        }
+
+        res = requests.post(API_ADD_TOOL, headers=headers, json=payload)
+
+        # If tool was successfully removed, we should update the state.
+        if res.status_code == 201:
+            res_json = res.json()
+            new_tool = Tool(res_json["data"]["relationships"]["tool"]["data"]["id"], res_json["data"]["id"], self._tools[res_json["data"]["relationships"]["tool"]["data"]["id"]]["label"])
+            self._phones[phone_id].add_tool(new_tool)
+            
         
     def add_note(self, tool, phone_id, text, title):
         headers = {"authorization": "Bearer " + self._token, "accept": "application/vnd.api+json", "content-type": "application/vnd.api+json"}

@@ -38,8 +38,8 @@ class Phone:
     def add_tool(self, tool):
         self._tools[tool.id] = tool
 
-    def remove_tool(self, tool):
-        self._tools(tool)
+    def remove_tool(self, tool_id):
+        self._tools.pop(tool_id)
 
 class Tool:
     def __init__(self, id, instance_id, label):

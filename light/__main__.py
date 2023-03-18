@@ -12,6 +12,7 @@ def phone_action_menu():
     print("3) Add Nested Tool")
     print("4) Remove Nested Tool")
     print("5) Manage Notes")
+    print("*) Back")
 
 def nested_tools_menu():
     pass
@@ -27,7 +28,7 @@ if __name__ == "__main__":
     phones = {}
 
     # Retry login until successful
-    while True:
+    while True and current_menu != "exit":
         email = getpass(prompt="Email: ")
         password = getpass()
         login_result = session.login(email, password)
@@ -36,10 +37,11 @@ if __name__ == "__main__":
         if "errors" in login_result:
             print("Error: " + login_result["errors"][0]["detail"])
         else:
-            while True:
+            while True and current_menu != "exit":
                 #chatgpt.main(session, next(iter(session.phones)))
 
                 # Phone selection menu
+                valid_selection = False
                 while current_menu == "select_phone":
                     # Setup phones
                     for idx, phone in enumerate(session.phones):
@@ -49,15 +51,20 @@ if __name__ == "__main__":
                         for idx, phone in enumerate(phones):
                             print(str(idx + 1) + ") " + phones[phone]['number'])
 
+                        print("*) Exit")
                         current_phone = input("Select a phone: ")
                         print("")
 
-                        if int(current_phone) >= 1 and int(current_phone) <= len(phones):
+                        if current_phone.isdigit() and int(current_phone) >= 1 and int(current_phone) <= len(phones):
                             valid_selection = True
                             current_menu = "select_phone_action"
+                        elif current_phone == "*":
+                            valid_selection = True
+                            current_menu = "exit"
 
                 # Action selection menu
                 valid_selection = False
+                current_action = 0
 
                 while current_menu == "select_phone_action":
                     while not valid_selection:
@@ -66,19 +73,40 @@ if __name__ == "__main__":
                         current_action = input("Select an option: ")
                         print("")
 
-                        if int(current_action) >= 1 and int(current_action) <= 5:
+                        if current_action.isdigit() and int(current_action) >= 1 and int(current_action) <= 5:
                             valid_selection = True
+                            current_menu = "action"
+                        elif current_action == "*":
+                            current_menu = "select_phone"
 
                 # Add tool
                 if current_action == "1":
-                    # We need to figure out which tools aren't yet added.
-                    uninstalled_tools = session.tools.copy()
+                    valid_selection = False
+                    selection = ""
 
-                    for tool in session.phones[phones[int(current_phone) - 1]["id"]].tools:
-                        uninstalled_tools.pop(tool)
+                    while selection != "*":
+                        # We need to figure out which tools aren't yet added.
+                        uninstalled_tools = session.tools.copy()
+                        uninstalled_tools_numbered = {}
 
-                    for idx, tool in enumerate(uninstalled_tools):
-                        print(str(idx + 1) + ") " + uninstalled_tools[tool]["label"])
+                        for tool in session.phones[phones[int(current_phone) - 1]["id"]].tools:
+                            uninstalled_tools.pop(tool)
+
+                        for idx, tool in enumerate(uninstalled_tools):
+                            print(str(idx + 1) + ") " + uninstalled_tools[tool]["label"])
+                            uninstalled_tools_numbered[idx + 1] = tool
+
+                        print("*) Back")
+                        selection = input("Select tool: ")
+                        print("")
+                        
+                        if selection.isdigit() and int(selection) >= 1 and int(selection) <= len(uninstalled_tools):
+                            valid_selection = True
+                            session.add_tool(session.phones[phones[int(current_phone) -1]["id"]].id, uninstalled_tools_numbered[int(selection)])
+                        elif selection == "*":
+                            current_menu = "select_phone_action"
+                        else:
+                            print("Invalid selection")
 
                 # Remove tool
                 elif current_action == "2":
@@ -86,17 +114,20 @@ if __name__ == "__main__":
                     selection = "0"
                     valid_selection = False
 
-                    while not valid_selection:
+                    while selection != "*":
                         for idx, tool in enumerate(session.phones[phones[int(current_phone) - 1]["id"]].tools):
                             print(str(idx + 1) + ") " + session.tools[tool]["label"])
                             installed_tools[idx] = tool
 
+                        print("*) Back")
                         selection = input("Select tool: ")
                         print("")
 
-                        if int(selection) >= 1 and int(selection) <= len(session.phones[phones[int(current_phone) - 1]["id"]].tools):
+                        if selection.isdigit() and int(selection) >= 1 and int(selection) <= len(session.phones[phones[int(current_phone) - 1]["id"]].tools):
                             valid_selection = True
+                            session.delete_tool(session.phones[phones[int(current_phone) - 1]["id"]].tools[installed_tools[int(selection) - 1]])
+                        elif selection == "*":
+                            current_menu = "select_phone_action"
+                        else:
+                            print("Invalid selection")
 
-                    print("Selection: " + selection)
-                    #print(installed_tools)
-                    session.delete_tool(session.phones[phones[int(current_phone) - 1]["id"]].tools[installed_tools[int(selection) - 1]])
