@@ -1,5 +1,6 @@
 import requests
 from phone import Note
+from phone import NestedTool
 from phone import Phone
 from phone import Tool
 
@@ -64,6 +65,8 @@ class LightApi:
             for phone in self._phones:
                 self.get_notes(phone, self._phones[phone].get_tool_by_name("Notes"))
 
+            self._get_nested_tools()
+
         return login_json
 
     def delete_tool(self, tool):
@@ -111,14 +114,13 @@ class LightApi:
 
         # Creating notes is a two-step process.
         note_request = requests.post(API_CREATE_NOTE, headers=headers, json=payload)
-        print(note_request.status_code)
         note_json = note_request.json()
         presigned_url = note_json["included"][0]["attributes"]["presigned_url"]
         new_note = Note(title, note_json["included"][0]["id"], text, presigned_url)
-        session.phones[phone_id].add_note(new_note)
-        self.update_note(session.phones[phone_id].notes[note_json["included"][0]["id"]])
+        self._phones[phone_id].add_note(new_note)
+        self.update_note(self._phones[phone_id].notes[note_json["included"][0]["id"]], text, presigned_url)
 
-        return note_json[0]["included"][0]["id"]
+        return note_json["included"][0]["id"]
 
     def get_notes(self, phone_id, tool):
         headers = {"authorization": "Bearer " + self._token, "accept": "application/vnd.api+json"}
@@ -164,11 +166,22 @@ class LightApi:
         for tool in available_tools_json["data"]:
             self._tools[tool["id"]] = {"label": tool["attributes"]["title"]}
 
-    def update_note(self, note, text):
-        headers = {"authorization": "Bearer " + self._token, "accept": "application/vnd.api+json"}
-        presigned_url_request = requests.get(API_PRESIGNED_PUT_URL + note.id + "/generate_presigned_put_url", headers=headers)
-        presigned_url_json = presigned_url_request.json()
-        presigned_url = presigned_url_json["presigned_put_url"]
+    def _get_nested_tools(self):
+        # Loop through every phone and figure out which nested tools are
+        # installed. Nested tools are identified by the last character of their
+        # title, "\u200b", a zero-width space.
+        for phone in self._phones:
+            for note in self._phones[phone].notes:
+                if self._phones[phone].notes[note].title.endswith("\u200b"):
+                    new_nested_tool = NestedTool(self._phones[phone].notes[note].title, self._phones[phone].notes[note].title.replace("\u200b", ""))
+                    self._phones[phone].add_nested_tool(new_nested_tool)
+        
+    def update_note(self, note, text, presigned_url = None):            
+        if not presigned_url:
+            headers = {"authorization": "Bearer " + self._token, "accept": "application/vnd.api+json"}
+            presigned_url_request = requests.get(API_PRESIGNED_PUT_URL + note.id + "/generate_presigned_put_url", headers=headers)
+            presigned_url_json = presigned_url_request.json()
+            presigned_url = presigned_url_json["presigned_put_url"]
 
         requests.put(presigned_url, data=text)
         

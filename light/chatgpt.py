@@ -12,7 +12,7 @@ def install(session, phone):
             return session.phones[phone].notes[note]
 
     print("ChatGPT not installed, installing now...")
-    note_id = session.add_note(session.phones[phone].get_tool_by_name("Notes"), phone, "", "ChatGPT" + "\u200b")
+    note_id = session.add_note(session.phones[phone].get_tool_by_name("Notes"), phone, " ", "ChatGPT" + "\u200b")
     print("ChatGPT successfully installed.")    
 
     return session.phones[phone].notes[note_id]

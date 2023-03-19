@@ -4,10 +4,15 @@ class Phone:
         self._number = None
         self._tools = {}
         self._notes = {}
+        self._nested_tools = {}
 
     @property
     def id(self):
         return self._id
+
+    @property
+    def nested_tools(self):
+        return self._nested_tools
 
     @property
     def number(self):
@@ -40,6 +45,9 @@ class Phone:
 
     def remove_tool(self, tool_id):
         self._tools.pop(tool_id)
+
+    def add_nested_tool(self, nested_tool):
+        self._nested_tools[nested_tool.title] = nested_tool
 
 class Tool:
     def __init__(self, id, instance_id, label):
@@ -81,3 +89,16 @@ class Note:
     #@content.setter
     #def content(self, content):
     #    self._content = content
+
+class NestedTool:
+    def __init__(self, id, title):
+        self._id = id
+        self._title = title
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def title(self):
+        return self._title

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from getpass import getpass
+from phone import NestedTool
 from phone import Phone
 from phone import Tool
 from api import LightApi
@@ -11,14 +12,16 @@ def phone_action_menu():
     print("2) Remove Tool")
     print("3) Add Nested Tool")
     print("4) Remove Nested Tool")
-    print("5) Manage Notes")
+    print("5) Run Nested Tool")
+    print("6) Manage Notes")
     print("*) Back")
 
 def nested_tools_menu():
     pass
     
 def install_nested_tool():
-    pass
+    print("1) ChatGPT")
+    print("*) Back")
 
 if __name__ == "__main__":
     current_phone = None
@@ -130,4 +133,35 @@ if __name__ == "__main__":
                             current_menu = "select_phone_action"
                         else:
                             print("Invalid selection")
+
+                # Add nested tool
+                elif current_action == "3":
+                    available_tools = ["ChatGPT"]
+                    selection = "0"
+
+                    while selection != "*":
+                        for idx, tool in enumerate(available_tools):
+                            if tool in session.phones[phones[int(current_phone) - 1]["id"]].nested_tools:
+                                available_tools.pop(idx)
+                        
+                        installed_nested_tools = session.phones[phones[int(current_phone) - 1]["id"]].nested_tools
+
+                        for idx, tool in enumerate(available_tools):
+                            print(str(idx + 1) + ") " + tool)
+
+                        print("*) Back")
+                        selection = input("Select tool to install: ")
+                        print("")
+                    
+                        if selection.isdigit() and int(selection) >= 1 and int(selection) <= len(available_tools):
+                            chatgpt.install(session, session.phones[phones[int(current_phone) - 1]["id"]].id)
+                            chatgpt_tool = NestedTool("ChatGPT\u200b", "ChatGPT")
+                            session.phones[phones[int(current_phone) - 1]["id"]].add_nested_tool(chatgpt_tool)
+                        elif selection == "*":
+                            current_menu = "select_phone_action"
+                        else:
+                            print("Invalid selection")
+                        
+                else:
+                    print("Invalid selection")
 
