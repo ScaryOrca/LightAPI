@@ -154,13 +154,38 @@ if __name__ == "__main__":
                         print("")
                     
                         if selection.isdigit() and int(selection) >= 1 and int(selection) <= len(available_tools):
-                            chatgpt.install(session, session.phones[phones[int(current_phone) - 1]["id"]].id)
-                            chatgpt_tool = NestedTool("ChatGPT\u200b", "ChatGPT")
-                            session.phones[phones[int(current_phone) - 1]["id"]].add_nested_tool(chatgpt_tool)
+                            if selection == "1":
+                                chatgpt.install(session, session.phones[phones[int(current_phone) - 1]["id"]].id)
+                                chatgpt_tool = NestedTool("ChatGPT\u200b", "ChatGPT")
+                                session.phones[phones[int(current_phone) - 1]["id"]].add_nested_tool(chatgpt_tool)
                         elif selection == "*":
                             current_menu = "select_phone_action"
                         else:
                             print("Invalid selection")
+                        
+                elif current_action == "5":
+                    selection = "0"
+                    available_tools = []
+
+                    for idx, tool in enumerate(session.phones[phones[int(current_phone) - 1]["id"]].nested_tools):
+                        available_tools.append(tool)
+
+                    while selection != "*":
+                        for idx, tool in enumerate(available_tools):
+                            print(str(idx + 1) + ") " + tool)
+
+                        print("*) Back")
+                        selection = input("Select tool to run: ")
+                        print("")
+
+                        if selection.isdigit() and int(selection) >= 1 and int(selection) <= len(available_tools):
+                            if selection == "1":
+                                chatgpt.main(session, session.phones[phones[int(current_phone) - 1]["id"]].id)
+                        elif selection == "*":
+                            current_menu = "select_phone_action"
+                        else:
+                            print("Invalid selection")
+                        
                         
                 else:
                     print("Invalid selection")

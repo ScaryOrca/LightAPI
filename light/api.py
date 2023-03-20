@@ -116,12 +116,20 @@ class LightApi:
         note_request = requests.post(API_CREATE_NOTE, headers=headers, json=payload)
         note_json = note_request.json()
         presigned_url = note_json["included"][0]["attributes"]["presigned_url"]
-        new_note = Note(title, note_json["included"][0]["id"], text, presigned_url)
+        new_note = Note(title, note_json["data"]["id"], text, presigned_url)
         self._phones[phone_id].add_note(new_note)
-        self.update_note(self._phones[phone_id].notes[note_json["included"][0]["id"]], text, presigned_url)
+        self.update_note(self._phones[phone_id].notes[note_json["data"]["id"]], text, presigned_url)
 
-        return note_json["included"][0]["id"]
+        return note_json["data"]["id"]
 
+    def get_presigned_get_url(self, note):
+        headers = {"authorization": "Bearer " + self._token, "accept": "application/vnd.api+json"}
+        presigned_url_request = requests.get(API_PRESIGNED_GET_URL + note.id + "/generate_presigned_get_url", headers=headers)
+        presigned_url_json = presigned_url_request.json()
+        presigned_url = presigned_url_json["presigned_get_url"]
+
+        return presigned_url
+        
     def get_notes(self, phone_id, tool):
         headers = {"authorization": "Bearer " + self._token, "accept": "application/vnd.api+json"}
         notes_request = requests.get(API_NOTES + tool.instance_id, headers=headers)
